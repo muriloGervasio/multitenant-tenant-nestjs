@@ -324,6 +324,9 @@ Now we will send the bellow request to the NestJS application.
 $ curl -X GET http://localhost:3000/posts -H "x-tenant-id: 3"
 ```
 The prisma provider will create a proxy of the prisma instance and will generate the query bellow to the database.
+
 ```sql
 SELECT "public"."posts"."id", "public"."posts"."title", "public"."posts"."content", "public"."posts"."tenant_id" FROM "public"."posts" WHERE "public"."posts"."tenant_id" = $1 OFFSET $2
 ```
+
+Now Happy coding! 🚀
