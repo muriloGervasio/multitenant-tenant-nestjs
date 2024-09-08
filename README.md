@@ -329,4 +329,6 @@ The prisma provider will create a proxy of the prisma instance and will generate
 SELECT "public"."posts"."id", "public"."posts"."title", "public"."posts"."content", "public"."posts"."tenant_id" FROM "public"."posts" WHERE "public"."posts"."tenant_id" = $1 OFFSET $2
 ```
 
+You can find the full code in the [GitHub repository](https://github.com/muriloGervasio/multitenant-tenant-nestjs).
 Now Happy coding! 🚀
+
