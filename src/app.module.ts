@@ -15,7 +15,7 @@ import { TenantGuard } from './infrastructure/guards/tenant.guard';
       middleware: {
         mount: true,
         setup: (cls, req) => {
-          cls.set('tenantId', req.headers['x-tenant-id']);
+          cls.set('tenantId', Number(req.headers['x-tenant-id']));
         },
       },
     }),

@@ -164,3 +164,166 @@ export class TenantGuard implements CanActivate {
 }
 ```
 
+## Prisma automatic filters by request tenant.
+
+Now we are defining a new prisma service that is going to filter the data based on the tenantId that is in the CLS context.
+
+To do this we are going to use the `prisma.$extends` method to add a middleware that is going to filter the data based on the tenantId.
+
+```typescript
+export function prismaTenantFactory(
+  prisma: PrismaService,
+  tenant_id: number | null,
+): PrismaService {
+  return prisma.$extends({
+    query: {
+      $allModels: {
+        findMany: function ({ query, args }) {
+          args.where = {
+            ...args.where,
+            tenant_id,
+          } as unknown;
+
+          return query(args);
+        },
+        findFirst({ query, args }) {
+          args.where = {
+            ...args.where,
+            tenant_id,
+          } as unknown;
+
+          return query(args);
+        },
+        findUnique({ query, args }) {
+          args.where = {
+            ...args.where,
+            tenant_id,
+          } as any;
+
+          return query(args);
+        },
+        findUniqueOrThrow({ query, args }) {
+          args.where = {
+            ...args.where,
+            tenant_id,
+          } as any;
+
+          return query(args);
+        },
+        findFirstOrThrow({ query, args }) {
+          args.where = {
+            ...args.where,
+            tenant_id,
+          } as unknown;
+
+          return query(args);
+        },
+        updateMany({ args, query }) {
+          args.where = {
+            ...args.where,
+            tenant_id,
+          } as unknown;
+
+          return query(args);
+        },
+
+        deleteMany({ args, query }) {
+          args.where = {
+            ...args.where,
+            tenant_id,
+          } as unknown;
+
+          return query(args);
+        },
+
+        create({ query, args }) {
+          args.data = {
+            ...args.data,
+            tenant_id: tenant_id,
+          } as any;
+
+          return query(args);
+        },
+        upsert({ args, query }) {
+          args.where = {
+            ...args.where,
+            tenant_id: tenant_id,
+          } as any;
+
+          args.create = {
+            ...args.create,
+            tenant_id: tenant_id,
+          } as any;
+
+          return query(args);
+        },
+
+        createMany({ query, args }) {
+          if (Array.isArray(args.data)) {
+            args.data = args.data.map(
+              (d) =>
+                ({
+                  ...d,
+                  tenant_id: tenant_id,
+                }) as any,
+            );
+          } else {
+            args.data = {
+              ...args.data,
+              tenant_id: tenant_id,
+            } as any;
+          }
+
+          return query(args);
+        },
+      },
+    },
+  }) as PrismaService;
+}
+```
+
+By doing this we define a factory that will extend our prisma client, adding a middleware that will filter the data based on the tenantId that is in the CLS context. Now we can just use this factory to create a new prisma client that will filter the data based on the tenantId.
+
+This will be our updated prisma service calling the factory.
+```typescript
+@Injectable()
+export class PrismaService extends PrismaClient implements OnModuleInit {
+  constructor(private readonly cls: ClsService) {
+    super({
+      log: ['query'],
+    });
+  }
+
+  async onModuleInit(): Promise<void> {
+    await this.$connect();
+  }
+
+  get instance(): PrismaService {
+    const tenantId = this.cls.get('tenantId');
+    return prismaTenantFactory(this, tenantId);
+  }
+}
+```
+
+Now we can just use the `instance` property of the prisma service to get a new prisma client that will filter the data based on the tenantId that is in the CLS context.
+
+```typescript
+@Injectable()
+export class PostService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  findAll() {
+    return this.prisma.instance.post.findMany();
+  }
+}
+```
+Now when we send a Get request to the `/posts` endpoint, the data will be filtered based on the tenantId that is in the CLS context.
+
+Now we will send the bellow request to the NestJS application.
+```bash
+$ curl -X GET http://localhost:3000/posts -H "x-tenant-id: 3"
+```
+The prisma provider will create a proxy of the prisma instance and will generate the query bellow to the database.
+```sql
+SELECT "public"."posts"."id", "public"."posts"."title", "public"."posts"."content", "public"."posts"."tenant_id" FROM "public"."posts" WHERE "public"."posts"."tenant_id" = $1 OFFSET $2
+```
