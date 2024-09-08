@@ -1,4 +1,4 @@
-# Building Multi-tenant applications with NestJS and Prisma.
+# How to make Multi-tenant applications with NestJS and a Prisma proxy to automatically filter tenant queries.
 In this article we are going to build a multi tenant application using NestJS and Prisma. 
 We will be using PostgreSQL as our database and we will be using Prisma to interact with the database. 
 At the end our Prisma service will be going to automatic make the filters based on tenant access level.
