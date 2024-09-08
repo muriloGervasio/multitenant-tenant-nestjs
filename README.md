@@ -81,7 +81,7 @@ export class PrismaModule {}
 > [Prisma with NestJS](https://docs.nestjs.com/recipes/prisma)
 ---
 
-##Defining our post module
+## Defining our post module
 
 Now you can just define a simple post module with a get all posts endpoint.
 ```typescript
