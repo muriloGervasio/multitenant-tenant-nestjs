@@ -79,3 +79,88 @@ export class PrismaModule {}
 ```
 
 > [Prisma with NestJS](https://docs.nestjs.com/recipes/prisma)
+---
+
+##Defining our post module
+
+Now you can just define a simple post module with a get all posts endpoint.
+```typescript
+import { Controller, Get } from '@nestjs/common';
+import { PostService } from './post.service';
+
+@Controller('posts')
+export class PostController {
+  constructor(private readonly postService: PostService) {}
+
+  @Get()
+  findAll() {
+    return this.postService.findAll();
+  }
+}
+```
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../infrastructure/prisma.service';
+
+@Injectable()
+export class PostService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  findAll() {
+    return this.prisma.post.findMany();
+  }
+}
+```
+
+---
+## NestJS CLS module
+
+Now we are going to use the NestJS CLS module to handle the tenant_id at our requests. The CLS module is a middleware that allows you to store data in a context that is shared across all the functions that are executed in the same request. This is useful for storing data that is specific to a request, such as the tenant_id.
+
+```bash
+$ npm i nestjs-cls
+```
+
+After that you can just set up the CLS module at your AppModule.
+```typescript
+@Module({
+  imports: [
+    PrismaModule,
+    PostModule,
+    ClsModule.forRoot({
+      middleware: {
+        mount: true,
+        setup: (cls, req) => {
+          cls.set('tenantId', req.headers['x-tenant-id']);
+        },
+      },
+    }),
+  ],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
+```
+
+By doing this we are going to set the tenantId in the CLS context for each request. Now we can just use this tenantId to filter the data based on the tenant that is making the request.
+
+Now we can just prevent the user from making a request without the tenantId or to access data he does not have access by creating a guard.
+
+```typescript
+@Injectable()
+export class TenantGuard implements CanActivate {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const tenantId = context.switchToHttp().getRequest().headers['x-tenant-id'];
+
+    if (!tenantId) {
+      throw new ForbiddenException('Tenant ID is required');
+    }
+
+    const userHasAccess = true; // Check if the user has access to the tenant
+
+    return userHasAccess;
+  }
+}
+```
+
