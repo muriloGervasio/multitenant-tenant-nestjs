@@ -143,9 +143,9 @@ After that you can just set up the CLS module at your AppModule.
 export class AppModule {}
 ```
 
-By doing this we are going to set the tenantId in the CLS context for each request. Now we can just use this tenantId to filter the data based on the tenant that is making the request.
+By doing this we are going to set the `tenant_id` in the CLS context for each request. Now we can just use this tenantId to filter the data based on the tenant that is making the request.
 
-Now we can just prevent the user from making a request without the tenantId or to access data he does not have access by creating a guard.
+Now we can just prevent the user from making a request without the `tenant_id` or to access data he does not have access by creating a guard.
 
 ```typescript
 @Injectable()
@@ -166,9 +166,9 @@ export class TenantGuard implements CanActivate {
 
 ## Prisma automatic filters by request tenant.
 
-Now we are defining a new prisma service that is going to filter the data based on the tenantId that is in the CLS context.
+Now we are defining a new prisma service that is going to filter the data based on the `tenant_id` that is in the CLS context.
 
-To do this we are going to use the `prisma.$extends` method to add a middleware that is going to filter the data based on the tenantId.
+To do this we are going to use the `prisma.$extends` method to add a middleware that is going to filter the data based on the `tenant_id`.
 
 ```typescript
 export function prismaTenantFactory(
@@ -282,7 +282,7 @@ export function prismaTenantFactory(
 }
 ```
 
-By doing this we define a factory that will extend our prisma client, adding a middleware that will filter the data based on the tenantId that is in the CLS context. Now we can just use this factory to create a new prisma client that will filter the data based on the tenantId.
+By doing this we define a factory that will extend our prisma client, adding a middleware that will filter the data based on the `tenant_id` that is in the CLS context. Now we can just use this factory to create a new prisma client that will filter the data based on the tenantId.
 
 This will be our updated prisma service calling the factory.
 ```typescript
